@@ -1,4 +1,28 @@
-ESC OFF Text Editor    footF5 save  F8 quit
+ESC OFF Text Editor    foo F5 save  F8 quit
 ESC OFF OK 2
 ESC ON OK 2
-ESC ON OK 1
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
+ESC OFF Text Editor    $$ F5 save  F8 quit
+ESC OFF OK 2
+ESC ON OK 2
+ESC ON Text Editor    $$ F5 save  F8 quit
