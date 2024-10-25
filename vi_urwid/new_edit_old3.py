@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Urwid example lazy text editor suitable for tabbed and flowing text
+
+Features:
+- custom list walker for lazily loading text file
+
+Usage:
+edit.py <filename>
+
+REF
+https://stackoverflow.com/questions/65147261/how-does-urwid-handle-keypress-hierarchy
+
+"""
 
 from __future__ import annotations
 
@@ -48,12 +61,12 @@ class LineWalker(urwid.ListWalker):
         self.focus = focus
         self._modified()
 
-    def get_next(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    #def get_next(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
+    #def get_next(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    def get_next(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
         return self._get_at_pos(position + 1)
 
-    def get_prev(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    #def get_prev(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
+    #def get_prev(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    def get_prev(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
         return self._get_at_pos(position - 1)
 
     def read_next_line(self) -> str:
@@ -126,8 +139,8 @@ class LineWalker(urwid.ListWalker):
         del self.lines[self.focus]
         self.focus -= 1
 
-
     def combine_focus_with_next(self) -> None:
+        """Combine the focus edit widget with the one below."""
 
         below, _ = self.get_next(self.focus)
         if below is None:
@@ -138,79 +151,60 @@ class LineWalker(urwid.ListWalker):
         focus.set_edit_text(focus.edit_text + below.edit_text)
         del self.lines[self.focus + 1]
 
-    def delete_line(self) -> None:
-        del self.lines[self.focus ]
-        self._modified()
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
 class Container(urwid.Frame):
     esc_mode = False
+    def __init__(self,attrmap,footer , footer_text, logfile):
+        #super("", expanded, allow_tab=True)
+        super().__init__(attrmap, footer=footer)
+        self.esc_mode = False
+        self.footer = footer
+        self.footer_text = footer_text
+        self.logfile = logfile
+
     footer_data = (
-        "foot",
+        "foot2",
         [
             "Text Editor    ",
-            "Goo ",
+            "*** ",
             ("key", "F5"),
             " save  ",
             ("key", "F8"),
             " quit",
         ],
     )
-    def __init__(self,attrmap,walker, logfile):
-        self.esc_mode = False
-        self.walker = walker
-        self.footer_text = urwid.Text(self.footer_data)
-        self.footer = urwid.AttrMap(self.footer_text, "foot")
-        super().__init__(attrmap, footer=self.footer)
-        self.logfile = logfile
-        self.d_key = False;
-
     def keypress(self, size, key):
+        #print(key, file=self.logfile)
+        #print(self.footer, file=self.logfile)
+        #print(self.footer.attr_map, file=self.logfile)
         if key == 'q':
             raise urwid.ExitMainLoop()
-        elif key == 'x':
-            if  self.esc_mode:
-                key = "delete"
-            else:
-                 pass
-
-        elif key == 'd':
-            if  self.esc_mode:
-                if self.d_key:
-                   self.walker.delete_line()
-                   self.d_key = False;
-                else:
-                   self.d_key = True;
-                return True
-            else:
-                 pass
-
-        elif key == 'esc':
+        if key == 'esc':
             if self.esc_mode:
                 self.esc_mode = False
                 tmp = self.footer_text.get_text()
                 print("ESC ON "+tmp[0], file=self.logfile)
 
-                self.footer_data[1][1] = "** "
-                footer_text = urwid.Text(self.footer_data)
-                self.footer_text.set_text(footer_text.text)
-                self.footer = urwid.AttrMap(self.footer_text, "foot")
-                #self.footer_text.set_text("OK 1")
-
-            else:
-                self.esc_mode = True
-                tmp = self.footer_text.get_text()
-                print("ESC OFF "+tmp[0], file=self.logfile)
                 self.footer_data[1][1] = "$$ "
                 footer_text = urwid.Text(self.footer_data)
                 self.footer_text.set_text(footer_text.text)
                 self.footer = urwid.AttrMap(self.footer_text, "foot2")
+                #self.footer_text.set_text("OK 1")
 
-                #self.footer_text.set_text("OK 2")
+                tmp = self.footer_text.get_text()
+                print("ESC ON "+tmp[0], file=self.logfile)
+            else:
+                self.esc_mode = True
+                tmp = self.footer_text.get_text()
+                print("ESC OFF "+tmp[0], file=self.logfile)
+                self.footer_text.set_text("OK 2")
+                tmp = self.footer_text.get_text()
+                print("ESC OFF "+tmp[0], file=self.logfile)
 
             return None
-
-        return super().keypress(size, key)
+        else:
+            return super().keypress(size, key)
 
     
 
@@ -223,12 +217,26 @@ class EditDisplay:
         ("key", "light cyan", "dark blue", "underline"),
     ]
 
+    footer_data = (
+        "foot",
+        [
+            "Text Editor    ",
+            "foo ",
+            ("key", "F5"),
+            " save  ",
+            ("key", "F8"),
+            " quit",
+        ],
+    )
 
     def __init__(self, name: str, log) -> None:
         self.save_name = name
         self.walker = LineWalker(name)
         self.listbox = urwid.ListBox(self.walker)
-        self.view = Container(urwid.AttrMap(self.listbox, "body"), walker=self.walker, logfile=log)
+        self.footer_text = urwid.Text(self.footer_data)
+        #self.footer_text = urwid.Text("footer_data")
+        self.footer = urwid.AttrMap(self.footer_text, "foot")
+        self.view = Container(urwid.AttrMap(self.listbox, "body"), footer=self.footer,footer_text=self.footer_text, logfile=log)
 
 
     def main(self) -> None:
@@ -245,9 +253,6 @@ class EditDisplay:
         elif k == "ctrl q":
             raise urwid.ExitMainLoop()
         elif k == "delete":
-            # delete at end of line
-            self.walker.combine_focus_with_next()
-        elif k == "x":
             # delete at end of line
             self.walker.combine_focus_with_next()
         elif k == "backspace":
