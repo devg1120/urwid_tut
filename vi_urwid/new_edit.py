@@ -242,6 +242,7 @@ class LineWalker(urwid.ListWalker):
         if self.start_V_mode_pos > self.focus:
           edit = self.lines[self.focus]
           self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"")
+          #self.lines[self.focus] = urwid.AttrMap(edit.original_text,"")
           self.focus += 1
         else:
           self.focus += 1
@@ -257,6 +258,7 @@ class LineWalker(urwid.ListWalker):
           self.focus -= 1
           edit = self.lines[self.focus]
           self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+          #self.lines[self.focus] = urwid.AttrMap(edit.original_text,"select")
         self._modified()
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
