@@ -75,15 +75,14 @@ class LineWalker(urwid.ListWalker):
 
             #edit = urwid.Edit(str(ln).zfill(3)+" ", expanded, allow_tab=True)
             edit = urwid.Edit("", expanded, allow_tab=True)
-            #edit_ = urwid.AttrMap(edit,"")
+            edit = urwid.AttrMap(edit,"")
             ## https://urwid.org/manual/displayattributes.html
             #edit = urwid.AttrMap(urwid.Edit("", expanded, allow_tab=True),"edit")
 
             #edit = UserInput("", expanded, allow_tab=True)
             edit.edit_pos = 0
             edit.original_text = next_line
-            edit_ = urwid.AttrMap(edit,"")
-            self.lines.append(edit_)
+            self.lines.append(edit)
 
 
     def read_next_line(self) -> str:
@@ -104,8 +103,7 @@ class LineWalker(urwid.ListWalker):
         #edit = UserInput("", expanded, allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = next_line
-        edit_ = urwid.AttrMap(edit,"")
-        self.lines.append(edit_)
+        self.lines.append(edit)
 
         return next_line
 
@@ -135,16 +133,13 @@ class LineWalker(urwid.ListWalker):
         """Divide the focus edit widget at the cursor location."""
 
         focus = self.lines[self.focus]
-        #pos = focus.edit_pos
-        pos = focus.original_widget.edit_pos
-        edit = urwid.Edit("", focus.original_widget.edit_text[pos:], allow_tab=True)
-        #edit = UserInput("", focus.edit_text[pos:], allow_tab=True)
+        pos = focus.edit_pos
+        #edit = urwid.Edit("", focus.edit_text[pos:], allow_tab=True)
+        edit = UserInput("", focus.edit_text[pos:], allow_tab=True)
         edit.original_text = ""
-        #focus.set_edit_text(focus.edit_text[:pos])
-        focus.original_widget.set_edit_text(focus.original_widget.edit_text[:pos])
+        focus.set_edit_text(focus.edit_text[:pos])
         edit.edit_pos = 0
-        edit_ = urwid.AttrMap(edit,"")
-        self.lines.insert(self.focus + 1, edit_)
+        self.lines.insert(self.focus + 1, edit)
 
     def combine_focus_with_prev(self) -> None:
         """Combine the focus edit widget with the one above."""
@@ -155,10 +150,8 @@ class LineWalker(urwid.ListWalker):
             return
 
         focus = self.lines[self.focus]
-        #above.set_edit_pos(len(above.edit_text))
-        #above.set_edit_text(above.edit_text + focus.edit_text)
-        above.original_widget.set_edit_pos(len(above.original_widget.edit_text))
-        above.original_widget.set_edit_text(above.original_widget.edit_text + focus.original_widget.edit_text)
+        above.set_edit_pos(len(above.edit_text))
+        above.set_edit_text(above.edit_text + focus.edit_text)
         del self.lines[self.focus]
         self.focus -= 1
 
@@ -171,8 +164,7 @@ class LineWalker(urwid.ListWalker):
             return
 
         focus = self.lines[self.focus]
-        #focus.set_edit_text(focus.edit_text + below.edit_text)
-        focus.original_widget.set_edit_text(focus.original_widget.edit_text + below.original_widget.edit_text)
+        focus.set_edit_text(focus.edit_text + below.edit_text)
         del self.lines[self.focus + 1]
 
     def delete_line(self) -> None:
@@ -189,8 +181,7 @@ class LineWalker(urwid.ListWalker):
         edit = urwid.Edit("", expanded, allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = line_str
-        edit_ = urwid.AttrMap(edit,"")
-        self.lines.insert(self.focus + 1,edit_)
+        self.lines.insert(self.focus + 1,edit)
         self._modified()
 
     def insert_next_line(self) -> None:
@@ -236,8 +227,6 @@ class LineWalker(urwid.ListWalker):
         self.start_V_mode_pos = self.focus
         self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
         self._modified()
-
-    """
     def down_V_mode_(self):
         self.focus += 1
         edit = self.lines[self.focus]
@@ -248,11 +237,8 @@ class LineWalker(urwid.ListWalker):
         edit = self.lines[self.focus]
         self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
         self._modified()
-    """
 
     def down_V_mode(self):
-        if self.focus == len(self.lines)-1:
-            return
         if self.start_V_mode_pos > self.focus:
           edit = self.lines[self.focus]
           self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"")
@@ -264,8 +250,6 @@ class LineWalker(urwid.ListWalker):
           self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
         self._modified()
     def up_V_mode(self):
-        if self.focus == 0:
-            return
         if self.start_V_mode_pos < self.focus:
           edit = self.lines[self.focus]
           self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"")
@@ -418,11 +402,6 @@ class Container(urwid.Frame):
                 if self.V_mode:
                   self.walker.up_V_mode()
                   return True
-        elif key == 'S':
-            if  self.esc_mode:
-                  #self.walker.save_file()
-                  key = "SaveFile"
-                  #return True
 
         elif key == 'esc':
             if self.esc_mode:
@@ -530,11 +509,7 @@ class EditDisplay:
 
         if k == "f5":
             self.save_file()
-        elif k == "SaveFile":
-            self.save_file()
         elif k == "f8":
-            raise urwid.ExitMainLoop()
-        elif k == "Quit":
             raise urwid.ExitMainLoop()
         elif k == "ctrl q":
             raise urwid.ExitMainLoop()
@@ -569,30 +544,6 @@ class EditDisplay:
         return True
 
     def save_file(self) -> None:
-        """Write the file out to disk."""
-
-        lines = []
-        walk = self.walker
-        for edit in walk.lines:
-            # collect the text already stored in edit widgets
-            #if edit.original_text.expandtabs() == edit.edit_text:
-            if edit.original_widget.original_text.expandtabs() == edit.original_widget.edit_text:
-                lines.append(edit.original_widget.original_text)
-            else:
-                lines.append(re_tab(edit.original_widget.edit_text))
-
-        # then the rest
-        while walk.file is not None:
-            lines.append(walk.read_next_line())
-
-        # write back to disk
-        with open(self.save_name, "w", encoding="utf-8") as outfile:
-            prefix = ""
-            for line in lines:
-                outfile.write(prefix + line)
-                prefix = "\n"
-
-    def save_file_org(self) -> None:
         """Write the file out to disk."""
 
         lines = []
