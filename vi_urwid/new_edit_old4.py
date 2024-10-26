@@ -70,8 +70,8 @@ class LineWalker(urwid.ListWalker):
 
         expanded = next_line.expandtabs()
 
-        edit = urwid.Edit("", expanded, allow_tab=True)
-        #edit = UserInput("", expanded, allow_tab=True)
+        #edit = urwid.Edit("", expanded, allow_tab=True)
+        edit = UserInput("", expanded, allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = next_line
         self.lines.append(edit)
@@ -142,42 +142,6 @@ class LineWalker(urwid.ListWalker):
         del self.lines[self.focus ]
         self._modified()
 
-    def yank_line(self) -> str:
-        line_str =  self.lines[self.focus ].get_edit_text()
-        return line_str
-
-    def paste_line(self, line_str) -> None:
-        #edit = urwid.Edit(line_str, allow_tab=False)
-        expanded = line_str.expandtabs()
-        #edit = UserInput(line_str, expanded, allow_tab=True)
-        edit = urwid.Edit("", expanded, allow_tab=True)
-        #edit = urwid.Edit(line_str )
-        edit.edit_pos = 0
-        #self.lines.append(edit)
-        edit.original_text = line_str
-        self.lines.insert(self.focus + 1,edit)
-        self._modified()
-
-    def replace(self, key) -> None:
-        edit = self.lines[self.focus]
-        #edit.insert_text(key)
-        pos = edit.edit_pos
-        text = edit.edit_text
-        textlist = list(text)
-        textlist[pos:pos+1] = key
-        new_text = "".join(textlist)
-        edit.set_edit_text(new_text)
-        pass
-    def pos_line_head(self):
-        edit = self.lines[self.focus]
-        edit.edit_pos = 0
-        self._modified()
-
-    def pos_line_tail(self):
-        edit = self.lines[self.focus]
-        edit.edit_pos = len(edit.edit_text)
-        self._modified()
-
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
 class Container(urwid.Frame):
     esc_mode = False
@@ -199,20 +163,9 @@ class Container(urwid.Frame):
         self.footer = urwid.AttrMap(self.footer_text, "foot")
         super().__init__(attrmap, footer=self.footer)
         self.logfile = logfile
-
-        self.d_key = False
-        self.y_key = False
-        self.yank = False
-        self.yank_line = ""
-        self.replace = False
+        self.d_key = False;
 
     def keypress(self, size, key):
-        if self.replace:
-           self.esc_mode = False
-           self.replace = False
-           self.walker.replace(key)
-           return True
-
         if key == 'q':
             raise urwid.ExitMainLoop()
         elif key == 'x':
@@ -232,39 +185,6 @@ class Container(urwid.Frame):
             else:
                  pass
 
-        elif key == 'y':
-            if  self.esc_mode:
-                if self.y_key:
-                   self.yank_line = self.walker.yank_line()
-                   self.y_key = False;
-                   self.yank = True;
-                else:
-                   self.y_key = True;
-                return True
-            else:
-                 pass
-        elif key == 'p':
-            if  self.esc_mode:
-                if self.yank:
-                   self.walker.paste_line(self.yank_line)
-                   self.yank = False;
-                   return True
-            else:
-                 pass
-
-        elif key == 'r':
-            if  self.esc_mode:
-                self.replace = True
-                return True
-
-        elif key == 'I':
-            if  self.esc_mode:
-                self.walker.pos_line_head()
-                return True
-        elif key == 'A':
-            if  self.esc_mode:
-                self.walker.pos_line_tail()
-                return True
         elif key == 'esc':
             if self.esc_mode:
                 self.esc_mode = False
