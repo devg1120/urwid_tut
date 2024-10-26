@@ -37,7 +37,6 @@ class LineWalker(urwid.ListWalker):
         self.file = open(name, encoding="utf-8")  # noqa: SIM115  # pylint: disable=consider-using-with
         self.lines = []
         self.focus = 0
-        self.read_all_lines()
 
     def __del__(self) -> None:
         self.file.close()
@@ -56,27 +55,6 @@ class LineWalker(urwid.ListWalker):
     def get_prev(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
     #def get_prev(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
         return self._get_at_pos(position - 1)
-
-    def read_all_lines(self) -> None:
-        """Read another line from the file."""
-
-        lines = self.file.readlines()
-        for next_line in lines:
-            if not next_line or next_line[-1:] != "\n":
-                # no newline on last line of file
-                self.file = None
-            else:
-                # trim newline characters
-                next_line = next_line[:-1]
-
-            expanded = next_line.expandtabs()
-
-            edit = urwid.Edit("", expanded, allow_tab=True)
-            #edit = UserInput("", expanded, allow_tab=True)
-            edit.edit_pos = 0
-            edit.original_text = next_line
-            self.lines.append(edit)
-
 
     def read_next_line(self) -> str:
         """Read another line from the file."""
@@ -100,8 +78,8 @@ class LineWalker(urwid.ListWalker):
 
         return next_line
 
-    def _get_at_pos(self, pos: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    #def _get_at_pos(self, pos: int) -> tuple[UserInput, int] | tuple[None, None]:
+    #def _get_at_pos(self, pos: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    def _get_at_pos(self, pos: int) -> tuple[UserInput, int] | tuple[None, None]:
         """Return a widget for the line number passed."""
 
         if pos < 0:
@@ -189,7 +167,7 @@ class LineWalker(urwid.ListWalker):
         self._modified()
     
     def focus_tail(self) -> None:
-        self.focus = len(self.lines) -1
+        self.focus = len(self.lines)
         self._modified()
 
     def replace(self, key) -> None:
@@ -209,7 +187,7 @@ class LineWalker(urwid.ListWalker):
 
     def pos_line_tail(self):
         edit = self.lines[self.focus]
-        edit.edit_pos = len(edit.edit_text) 
+        edit.edit_pos = len(edit.edit_text) -3
         self._modified()
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
@@ -252,8 +230,7 @@ class Container(urwid.Frame):
            return True
 
         if key == 'q':
-            if  self.esc_mode:
-               raise urwid.ExitMainLoop()
+            raise urwid.ExitMainLoop()
         elif key == ':':
             if  self.esc_mode:
                 self.command_mode = True
