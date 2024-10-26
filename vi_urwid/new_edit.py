@@ -224,7 +224,39 @@ class LineWalker(urwid.ListWalker):
 
     def start_V_mode(self):
         edit = self.lines[self.focus]
+        self.start_V_mode_pos = self.focus
         self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+        self._modified()
+    def down_V_mode_(self):
+        self.focus += 1
+        edit = self.lines[self.focus]
+        self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+        self._modified()
+    def up_V_mode_(self):
+        self.focus -= 1
+        edit = self.lines[self.focus]
+        self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+        self._modified()
+
+    def down_V_mode(self):
+        if self.start_V_mode_pos > self.focus:
+          edit = self.lines[self.focus]
+          self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"")
+          self.focus += 1
+        else:
+          self.focus += 1
+          edit = self.lines[self.focus]
+          self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+        self._modified()
+    def up_V_mode(self):
+        if self.start_V_mode_pos < self.focus:
+          edit = self.lines[self.focus]
+          self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"")
+          self.focus -= 1
+        else:
+          self.focus -= 1
+          edit = self.lines[self.focus]
+          self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
         self._modified()
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
@@ -258,7 +290,7 @@ class Container(urwid.Frame):
         self.yank_line = ""
         self.replace = False
         self.command_mode = False
-        self.V_mode = True
+        self.V_mode = False
 
     def keypress(self, size, key):
         if self.replace:
@@ -358,6 +390,17 @@ class Container(urwid.Frame):
                 self.V_mode = True
                 self.walker.start_V_mode()
                 return True
+        elif key == 'down':
+            if  self.esc_mode:
+                if self.V_mode:
+                  self.walker.down_V_mode()
+                  return True
+        elif key == 'up':
+            if  self.esc_mode:
+                if self.V_mode:
+                  self.walker.up_V_mode()
+                  return True
+
         elif key == 'esc':
             if self.esc_mode:
                 self.esc_mode = False
