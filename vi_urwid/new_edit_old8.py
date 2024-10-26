@@ -75,7 +75,7 @@ class LineWalker(urwid.ListWalker):
 
             #edit = urwid.Edit(str(ln).zfill(3)+" ", expanded, allow_tab=True)
             edit = urwid.Edit("", expanded, allow_tab=True)
-            edit = urwid.AttrMap(edit,"")
+            #edit = urwid.AttrMap(edit,"")
             ## https://urwid.org/manual/displayattributes.html
             #edit = urwid.AttrMap(urwid.Edit("", expanded, allow_tab=True),"edit")
 
@@ -172,8 +172,7 @@ class LineWalker(urwid.ListWalker):
         self._modified()
 
     def yank_line(self) -> str:
-        #line_str =  self.lines[self.focus ].get_edit_text()
-        line_str =  self.lines[self.focus ].original_widget.edit_text
+        line_str =  self.lines[self.focus ].get_edit_text()
         return line_str
 
     def paste_line(self, line_str) -> None:
@@ -212,19 +211,17 @@ class LineWalker(urwid.ListWalker):
         pass
     def pos_line_head(self):
         edit = self.lines[self.focus]
-        #edit.edit_pos = 0
-        edit.original_widget.edit_pos = 0
+        edit.edit_pos = 0
         self._modified()
 
     def pos_line_tail(self):
         edit = self.lines[self.focus]
-        #edit.edit_pos = len(edit.edit_text) 
-        edit.original_widget.edit_pos = len(edit.original_widget.edit_text) 
+        edit.edit_pos = len(edit.edit_text) 
         self._modified()
 
     def start_V_mode(self):
         edit = self.lines[self.focus]
-        self.lines[self.focus] = urwid.AttrMap(edit.original_widget,"select")
+        self.lines[self.focus] = urwid.AttrMap(edit,"select")
         self._modified()
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
@@ -443,7 +440,7 @@ class EditDisplay:
         ("foot", "dark cyan", "dark blue", "bold"),
         ("foot2", "yellow", "dark green", "bold"),
         ("edit", "", "", ""),
-        ("select", "yellow", "dark gray", "bold"),
+        ("select", "yellow", "dark green", "bold"),
         ("key", "light cyan", "dark blue", "underline"),
     ]
 
