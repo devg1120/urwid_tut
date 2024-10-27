@@ -35,12 +35,17 @@ class LineWalker(urwid.ListWalker):
     def __init__(self, name: str) -> None:
         # do not overcomplicate example
         self.file = open(name, encoding="utf-8")  # noqa: SIM115  # pylint: disable=consider-using-with
+        self.logfile = open("linewalker.log", mode="w")
         self.lines = []
         self.focus = 0
         self.read_all_lines()
 
+
     def __del__(self) -> None:
         self.file.close()
+
+    def log(self, msg):
+        print(msg , file=self.logfile, flush=True)
 
     def get_focus(self):
         return self._get_at_pos(self.focus)
@@ -59,6 +64,7 @@ class LineWalker(urwid.ListWalker):
 
     def read_all_lines(self) -> None:
         """Read another line from the file."""
+        self.log("read_all_lines")
 
         lines = self.file.readlines()
         ln= 0
@@ -82,8 +88,13 @@ class LineWalker(urwid.ListWalker):
             #edit = UserInput("", expanded, allow_tab=True)
             edit.edit_pos = 0
             edit.original_text = next_line
-            edit_ = urwid.AttrMap(edit,"")
+            #edit_ = urwid.AttrMap(edit,"")
+            edit_ = urwid.AttrMap(edit,"", "focus")
+            #edit_ = urwid.AttrMap(edit,{None:"", "ABC": "rect"})
             self.lines.append(edit_)
+
+            #self.log(edit_.original_widget)
+            #self.log(edit_.attr_map)
 
 
     def read_next_line(self) -> str:
@@ -277,6 +288,39 @@ class LineWalker(urwid.ListWalker):
           #self.lines[self.focus] = urwid.AttrMap(edit.original_text,"select")
         self._modified()
 
+    def lines_dump(self):
+        ln = 0
+        for edit_ in self.lines:
+            ln += 1
+            self.log(str(ln).zfill(2) + " widget: " + str(edit_.original_widget))
+            self.log("  " + " attr_map: " + str(edit_.attr_map))
+
+    def lines_reset_attr_map(self):
+        for edit_ in self.lines:
+            edit_.attr_map = {None : '', 'E': 'rect'}
+            edit_.focus_map = {None : 'focus'}
+
+    def test1(self):
+        for edit_ in self.lines:
+            edit_.attr_map = {None : 'rect'}
+    def test2(self):
+        for edit_ in self.lines:
+            #edit_.attr_map = {None : 'rect'}
+            self.log(edit_.original_widget)
+            self.log(edit_.original_widget.original_text)
+            self.log(edit_.original_widget.text)
+            #edit_.original_widget.original_text = ('rect', "abcdef")
+
+    def test(self):
+        line_ = self.lines[0]
+        edit_ =line_.original_widget
+        text = edit_.original_text
+        #edit = urwid.Edit(u"head",('rect',u"ABC"),text, text.expandtabs, allow_tab=True)
+        edit = urwid.Edit("","ABC",  text.expandtabs, allow_tab=True)
+        self.lines[0] = urwid.AttrMap(edit,"")
+        self._modified()
+
+
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
 class Container(urwid.Frame):
     esc_mode = False
@@ -309,6 +353,9 @@ class Container(urwid.Frame):
         self.replace = False
         self.command_mode = False
         self.V_mode = False
+
+    def log(self, msg):
+        print(msg , file=self.logfile, flush=True)
 
     def keypress(self, size, key):
         if self.replace:
@@ -423,23 +470,29 @@ class Container(urwid.Frame):
                   #self.walker.save_file()
                   key = "SaveFile"
                   #return True
+        elif key == 'T':
+            if  self.esc_mode:
+                  self.walker.test()
+                  return True
 
         elif key == 'esc':
             if self.esc_mode:
                 self.esc_mode = False
                 tmp = self.footer_text.get_text()
-                print("ESC ON "+tmp[0], file=self.logfile)
+                self.log("ESC OFF "+tmp[0])
 
                 self.footer_data[1][1] = "** "
                 footer_text = urwid.Text(self.footer_data)
                 self.footer_text.set_text(footer_text.text)
                 self.footer = urwid.AttrMap(self.footer_text, "foot")
                 #self.footer_text.set_text("OK 1")
+                #self.walker.lines_dump()
+                self.walker.lines_reset_attr_map()
 
             else:
                 self.esc_mode = True
                 tmp = self.footer_text.get_text()
-                print("ESC OFF "+tmp[0], file=self.logfile)
+                self.log("ESC ON "+tmp[0])
                 self.footer_data[1][1] = "$$ "
                 footer_text = urwid.Text(self.footer_data)
                 self.footer_text.set_text(footer_text.text)
@@ -510,6 +563,8 @@ class EditDisplay:
         ("foot2", "yellow", "dark green", "bold"),
         ("edit", "", "", ""),
         ("select", "yellow", "dark gray", "bold"),
+        ("focus",  "black", "dark blue", "bold"),
+        ("rect",  "black",   "dark blue", "bold"),
         ("key", "light cyan", "dark blue", "underline"),
     ]
 
