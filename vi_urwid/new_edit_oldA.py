@@ -2,7 +2,6 @@
 
 
 from __future__ import annotations
-from urwid.canvas import apply_text_layout
 
 import sys
 import typing
@@ -15,69 +14,6 @@ class UserInput(urwid.Edit):
         #super("", expanded, allow_tab=True)
         super().__init__(a,b, allow_tab = allow_tab)
         self.esc_mode = False
-
-
-    def text_render(
-        self,
-        size: tuple[int] | tuple[()],  # type: ignore[override]
-        focus: bool = False,
-     ) -> urwid.TextCanvas:
-        """
-        Render contents with wrapping and alignment.  Return canvas.
-
-        See :meth:`Widget.render` for parameter details.
-
-        >>> Text(u"important things").render((18,)).text
-        [b'important things  ']
-        >>> Text(u"important things").render((11,)).text
-        [b'important  ', b'things     ']
-        >>> Text("demo text").render(()).text
-        [b'demo text']
-        """
-        text, attr = self.get_text()
-        if size:
-            (maxcol,) = size
-        else:
-            maxcol, _ = self.pack(focus=focus)
-
-        #trans = self.get_line_translation(maxcol, (text, attr))
-        trans = super().get_line_translation(maxcol, (text, attr))
-        return apply_text_layout(text, attr, trans, maxcol)
-
-    ## https://github.com/urwid/urwid/blob/master/urwid/widget/edit.py#L581
-
-    def render(
-        self,
-        size: tuple[int],  # type: ignore[override]
-        focus: bool = False,
-    ) -> urwid.TextCanvas | urwid.CompositeCanvas:
-        """
-        Render edit widget and return canvas.  Include cursor when in
-        focus.
-
-        >>> edit = Edit("? ","yes")
-        >>> c = edit.render((10,), focus=True)
-        >>> c.text
-        [b'? yes     ']
-        >>> c.cursor
-        (5, 0)
-        """
-        self._shift_view_to_cursor = bool(focus)  # noqa: FURB123,RUF100
-
-        #canv: urwid.TextCanvas | urwid.CompositeCanvas = super().render(size, focus)
-        canv: urwid.TextCanvas | urwid.CompositeCanvas = self.text_render(size, focus)
-        if focus:
-            canv = urwid.CompositeCanvas(canv)
-            canv.cursor = self.get_cursor_coords(size)
-
-        # .. will need to FIXME if I want highlight to work again
-        # if self.highlight:
-        #    hstart, hstop = self.highlight_coords()
-        #    d.coords['highlight'] = [ hstart, hstop ]
-        #d.coords['highlight'] = [ 1, 3 ]
-
-        return canv
-
 """
     def keypress(self, size, key):
         if key == 'q':
@@ -118,12 +54,12 @@ class LineWalker(urwid.ListWalker):
         self.focus = focus
         self._modified()
 
-    #def get_next(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    def get_next(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
+    def get_next(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    #def get_next(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
         return self._get_at_pos(position + 1)
 
-    #def get_prev(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    def get_prev(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
+    def get_prev(self, position: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    #def get_prev(self, position: int) -> tuple[UserInput, int] | tuple[None, None]:
         return self._get_at_pos(position - 1)
 
     def read_all_lines(self) -> None:
@@ -143,9 +79,12 @@ class LineWalker(urwid.ListWalker):
 
             expanded = next_line.expandtabs()
 
-            #edit = urwid.Edit("", expanded, allow_tab=True)
-            edit = UserInput("", expanded, allow_tab=True)
+            #edit = urwid.Edit(str(ln).zfill(3)+" ", expanded, allow_tab=True)
+            edit = urwid.Edit("", expanded, allow_tab=True)
+            #attr = ({"ABC": "select"}, "")
+            #edit = urwid.Edit(attr, expanded, allow_tab=True)
 
+            #edit_ = urwid.AttrMap(edit,"")
             ## https://urwid.org/manual/displayattributes.html
             #edit = urwid.AttrMap(urwid.Edit("", expanded, allow_tab=True),"edit")
 
@@ -177,8 +116,8 @@ class LineWalker(urwid.ListWalker):
 
         expanded = next_line.expandtabs()
 
-        #edit = urwid.Edit("", expanded, allow_tab=True)
-        edit = UserInput("", expanded, allow_tab=True)
+        edit = urwid.Edit("", expanded, allow_tab=True)
+        #edit = UserInput("", expanded, allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = next_line
         edit_ = urwid.AttrMap(edit,"")
@@ -186,8 +125,8 @@ class LineWalker(urwid.ListWalker):
 
         return next_line
 
-    #def _get_at_pos(self, pos: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
-    def _get_at_pos(self, pos: int) -> tuple[UserInput, int] | tuple[None, None]:
+    def _get_at_pos(self, pos: int) -> tuple[urwid.Edit, int] | tuple[None, None]:
+    #def _get_at_pos(self, pos: int) -> tuple[UserInput, int] | tuple[None, None]:
         """Return a widget for the line number passed."""
 
         if pos < 0:
@@ -214,8 +153,8 @@ class LineWalker(urwid.ListWalker):
         focus = self.lines[self.focus]
         #pos = focus.edit_pos
         pos = focus.original_widget.edit_pos
-        #edit = urwid.Edit("", focus.original_widget.edit_text[pos:], allow_tab=True)
-        edit = UserInput("", focus.original_widget.edit_text[pos:], allow_tab=True)
+        edit = urwid.Edit("", focus.original_widget.edit_text[pos:], allow_tab=True)
+        #edit = UserInput("", focus.edit_text[pos:], allow_tab=True)
         edit.original_text = ""
         #focus.set_edit_text(focus.edit_text[:pos])
         focus.original_widget.set_edit_text(focus.original_widget.edit_text[:pos])
@@ -263,8 +202,7 @@ class LineWalker(urwid.ListWalker):
 
     def paste_line(self, line_str) -> None:
         expanded = line_str.expandtabs()
-        #edit = urwid.Edit("", expanded, allow_tab=True)
-        edit = UserInput("", expanded, allow_tab=True)
+        edit = urwid.Edit("", expanded, allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = line_str
         edit_ = urwid.AttrMap(edit,"")
@@ -272,8 +210,7 @@ class LineWalker(urwid.ListWalker):
         self._modified()
 
     def insert_next_line(self) -> None:
-        #edit = urwid.Edit("", "", allow_tab=True)
-        edit = UserInput("", "", allow_tab=True)
+        edit = urwid.Edit("", "", allow_tab=True)
         edit.edit_pos = 0
         edit.original_text = ""
         self.lines.insert(self.focus + 1,edit)
@@ -289,15 +226,15 @@ class LineWalker(urwid.ListWalker):
         self._modified()
 
     def replace(self, key) -> None:
-        edit = self.lines[self.focus]
-        #edit.insert_text(key)
-        pos = edit.original_widget.edit_pos
-        text = edit.original_widget.edit_text
-        textlist = list(text)
-        textlist[pos:pos+1] = key
-        new_text = "".join(textlist)
-        edit.original_widget.set_edit_text(new_text)
- 
+        edit = self.lines[self.focus]    
+        #edit.insert_text(key)    
+        pos = edit.original_widget.edit_pos    
+        text = edit.original_widget.edit_text    
+        textlist = list(text)    
+        textlist[pos:pos+1] = key    
+        new_text = "".join(textlist)    
+        edit.original_widget.set_edit_text(new_text)  
+
     def pos_line_head(self):
         edit = self.lines[self.focus]
         #edit.edit_pos = 0
@@ -382,23 +319,18 @@ class LineWalker(urwid.ListWalker):
     def test(self):
         line_ = self.lines[0]
         edit_ =line_.original_widget
-
-        text, attr = edit_.get_text()
-        text2 = "xyz"
-        edit_.set_edit_text(text2)
-
-        #text = edit_.original_text
-        #edit_.set_edit_text("ABC")
+        text = edit_.original_text
+        edit_.set_edit_text("ABC")
         c = edit_.render((1,))  # 5 = length
-        #c.content(cols=3, rows=1, attr = {None: "rect"})
-        #b = urwid.TextCanvas(["xyz".encode("utf-8")])
-        cl = c.content()
+        c.content(cols=3, rows=1, attr = {None: "rect"})
+        b = urwid.TextCanvas(["xyz".encode("utf-8")])
+        cl = c.content(b)
         for ci in cl:
            self.log(str(ci))
-        #   #c[0] = ({"A": "rect"}, None, b'X')
-        #   #c[0] = (None, None, b'X')
-        #   #self.log(str(c[0][0]))
-        #   #self.log(str(c))
+           #c[0] = ({"A": "rect"}, None, b'X')
+           #c[0] = (None, None, b'X')
+           #self.log(str(c[0][0]))
+           #self.log(str(c))
 
         #p = urwid.CompositeCanvas(c)
         #p.fill_attr_apply({"ABC":"rect"})
@@ -428,8 +360,7 @@ class Container(urwid.Frame):
         self.walker = walker
         self.footer_text = urwid.Text(self.footer_data)
         self.footer = urwid.AttrMap(self.footer_text, "foot")
-        #self.edit_command = urwid.Edit(":", "", allow_tab=True)
-        self.edit_command = UserInput(":", "", allow_tab=True)
+        self.edit_command = urwid.Edit(":", "", allow_tab=True)
         super().__init__(attrmap, footer=self.footer)
         #super().__init__(attrmap, footer=self.edit_command)
         self.logfile = logfile
