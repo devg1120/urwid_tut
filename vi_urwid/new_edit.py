@@ -81,6 +81,9 @@ class LineWalker(urwid.ListWalker):
 
             #edit = urwid.Edit(str(ln).zfill(3)+" ", expanded, allow_tab=True)
             edit = urwid.Edit("", expanded, allow_tab=True)
+            #attr = ({"ABC": "select"}, "")
+            #edit = urwid.Edit(attr, expanded, allow_tab=True)
+
             #edit_ = urwid.AttrMap(edit,"")
             ## https://urwid.org/manual/displayattributes.html
             #edit = urwid.AttrMap(urwid.Edit("", expanded, allow_tab=True),"edit")
@@ -90,7 +93,9 @@ class LineWalker(urwid.ListWalker):
             edit.original_text = next_line
             #edit_ = urwid.AttrMap(edit,"")
             edit_ = urwid.AttrMap(edit,"", "focus")
-            #edit_ = urwid.AttrMap(edit,{None:"", "ABC": "rect"})
+            #edit_ = urwid.AttrMap(edit,"")
+            edit_.set_attr_map({"ABC": "rect"})
+            edit_.set_focus_map({None : "focus"})
             self.lines.append(edit_)
 
             #self.log(edit_.original_widget)
@@ -315,9 +320,11 @@ class LineWalker(urwid.ListWalker):
         line_ = self.lines[0]
         edit_ =line_.original_widget
         text = edit_.original_text
+        edit_.set_edit_text("ABC")
+        c = edit_.render((1,))
         #edit = urwid.Edit(u"head",('rect',u"ABC"),text, text.expandtabs, allow_tab=True)
-        edit = urwid.Edit("","ABC",  text.expandtabs, allow_tab=True)
-        self.lines[0] = urwid.AttrMap(edit,"")
+        #edit = urwid.Edit("","ABC",  text.expandtabs, allow_tab=True)
+        #self.lines[0] = urwid.AttrMap(edit,"")
         self._modified()
 
 
