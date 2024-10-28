@@ -6,14 +6,9 @@ from urwid.canvas import apply_text_layout
 
 import sys
 import typing
-from urwid.util import decompose_tagmarkup, get_encoding
-from pprint import pprint
 
 import urwid
-DBF = open("./dbp.log", mode = "w")
-def pp(obj):
-    pprint(obj, stream = DBF )
-    
+
 class UserInput(urwid.Edit):
     esc_mode = False
     def __init__(self,a,b,allow_tab ):
@@ -41,11 +36,11 @@ class UserInput(urwid.Edit):
         """
         text, attr = self.get_text()
 
-        #attr = [
-        #        #("select",1),
-        #        ("",1),
-        #        ("rect",3)
-        #        ]
+        attr = [
+                #("select",1),
+                ("",1),
+                ("rect",3)
+                ]
         if size:
             (maxcol,) = size
         else:
@@ -54,30 +49,6 @@ class UserInput(urwid.Edit):
         #trans = self.get_line_translation(maxcol, (text, attr))
         trans = super().get_line_translation(maxcol, (text, attr))
         return apply_text_layout(text, attr, trans, maxcol)
-
-
-    def set_text(self, markup: str | tuple[Hashable, str] | list[str | tuple[Hashable, str]]) -> None:
-        """
-        Set content of text widget.
-
-        :param markup: see :class:`Text` for description.
-        :type markup: text markup
-
-        >>> t = Text(u"foo")
-        >>> print(t.text)
-        foo
-        >>> t.set_text(u"bar")
-        >>> print(t.text)
-        bar
-        >>> t.text = u"baz"  # not supported because text stores text but set_text() takes markup
-        Traceback (most recent call last):
-        AttributeError: can't set attribute
-        """
-        #self._text, self._attrib = decompose_tagmarkup(markup)
-        self._edit_text, self._attrib = decompose_tagmarkup(markup)
-        self._invalidate()
-
-
 
     ## https://github.com/urwid/urwid/blob/master/urwid/widget/edit.py#L581
 
@@ -187,11 +158,11 @@ class LineWalker(urwid.ListWalker):
             #edit = UserInput("", expanded, allow_tab=True)
             edit.edit_pos = 0
             edit.original_text = next_line
-            edit_ = urwid.AttrMap(edit,"")
-            #edit_ = urwid.AttrMap(edit,"", "focus")
             #edit_ = urwid.AttrMap(edit,"")
-            #edit_.set_attr_map({"ABC": "rect"})
-            #edit_.set_focus_map({None : "focus"})
+            edit_ = urwid.AttrMap(edit,"", "focus")
+            #edit_ = urwid.AttrMap(edit,"")
+            edit_.set_attr_map({"ABC": "rect"})
+            edit_.set_focus_map({None : "focus"})
             self.lines.append(edit_)
 
             #self.log(edit_.original_widget)
@@ -401,7 +372,7 @@ class LineWalker(urwid.ListWalker):
     def lines_reset_attr_map(self):
         for edit_ in self.lines:
             edit_.attr_map = {None : '', 'E': 'rect'}
-            #edit_.focus_map = {None : 'focus'}
+            edit_.focus_map = {None : 'focus'}
 
     def test1(self):
         for edit_ in self.lines:
@@ -422,27 +393,26 @@ class LineWalker(urwid.ListWalker):
         text2 = "xyz"
         edit_.set_edit_text(text2)
 
-        line_ = self.lines[2]
-        edit_ =line_.original_widget
+        #text = edit_.original_text
+        #edit_.set_edit_text("ABC")
+        c = edit_.render((1,))  # 5 = length
+        #c.content(cols=3, rows=1, attr = {None: "rect"})
+        #b = urwid.TextCanvas(["xyz".encode("utf-8")])
+        cl = c.content()
+        for ci in cl:
+           self.log(str(ci))
+        #   #c[0] = ({"A": "rect"}, None, b'X')
+        #   #c[0] = (None, None, b'X')
+        #   #self.log(str(c[0][0]))
+        #   #self.log(str(c))
 
-        text, attr = edit_.get_text()
-        text2 = "ABC"
-        #edit_.set_text(("select",text2))
-        #edit_.set_text(("select","AB"))
-        #edit_.set_text(("select","ABC"))
-        edit_.set_text([("select","AB"), ("rect","XY")])
+        #p = urwid.CompositeCanvas(c)
+        #p.fill_attr_apply({"ABC":"rect"})
 
-        text, attr = edit_.get_text()
-        pp(text)
-        # ''ABXY'
-        pp(attr)
-        # [('select', 2), ('rect', 2)]
-
-        edit_ = self.lines[4].original_widget
-        edit_.set_text([("code_red","AB"),(None,"ABCDEFG"), ("code_green","XY")])
-
+        #edit = urwid.Edit(u"head",('rect',u"ABC"),text, text.expandtabs, allow_tab=True)
+        #edit = urwid.Edit("","ABC",  text.expandtabs, allow_tab=True)
+        #self.lines[0] = urwid.AttrMap(edit,"")
         self._modified()
-
 
 
 #urwid.Frame(urwid.AttrMap(self.listbox, "body"), footer=self.footer)
@@ -691,9 +661,6 @@ class EditDisplay:
         ("focus",  "black", "dark blue", "bold"),
         ("rect",  "black",   "dark blue", "bold"),
         ("key", "light cyan", "dark blue", "underline"),
-
-        ("code_red",    "dark red",     "", "bold"),
-        ("code_green",  "dark green",   "", "bold"),
     ]
 
 
