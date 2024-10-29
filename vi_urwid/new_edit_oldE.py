@@ -10,18 +10,10 @@ from urwid.util import decompose_tagmarkup, get_encoding
 from pprint import pprint
 
 import urwid
-from enum import Enum
-
 DBF = open("./dbp.log", mode = "w")
 def pp(obj):
     pprint(obj, stream = DBF )
-def p(msg):
-    print(msg, file = DBF, flush = True )
     
-class Attr(Enum):
-       INS = 1
-       BS  = 2
-       DEL = 3
 class UserInput(urwid.Edit):
     esc_mode = False
     line_number = False
@@ -129,91 +121,20 @@ class UserInput(urwid.Edit):
 
         return canv
 
-
-    def update_attr(self, t):
-
-        dlist = []
-        pos = 0
-        for e in self._attrib:
-            dlist.append((pos, pos + e[1] -1,e))
-            pos = pos + e[1]
-
-        p(self._attrib)
-        p(dlist)
-        new_attrib = []
-
-        if t == Attr.INS :
-           #p("pos:" + str(self.edit_pos))
-           pos = self.edit_pos 
-           if pos == 0:                      # head
-              new_attrib.append(("",1))
-              for  dl in dlist:
-                 new_attrib.append(dl[2])
-           elif pos == len(self._edit_text):  # tail
-              for  dl in dlist:
-                 new_attrib.append(dl[2])
-              new_attrib.append(("",1))
-           else:                              # mid
-              for  dl in dlist:
-                if pos   == dl[0]:
-                   #p("#pre insert")
-                   new_attrib.append(("",1))
-                   new_attrib.append(dl[2])
-                elif dl[0] < pos and pos  <= dl[1]:
-                   #p("#mid insert")
-                   d1 = dl[2]
-                   d2 = (d1[0],d1[1]+1)
-                   new_attrib.append(d2)
-                else:
-                   new_attrib.append(dl[2])
-           #p(new_attrib)
-           self._attrib = new_attrib
-           
-        elif t == Attr.BS :
-           pos = self.edit_pos  
-           for  dl in dlist:
-              if dl[0] < pos  and pos -1 <= dl[1]:
-                   #p("#mid insert")
-                   d1 = dl[2]
-                   d2 = (d1[0],d1[1]-1)
-                   new_attrib.append(d2)
-              else:
-                   new_attrib.append(dl[2])
-           #p(new_attrib)
-           self._attrib = new_attrib
-           
-        elif t == Attr.DEL :
-           pos = self.edit_pos  
-           for  dl in dlist:
-              #if dl[0] < pos  and pos -1 <= dl[1]:
-              if dl[0] <= pos  and pos -1 < dl[1]:
-              #if dl[0] < pos -1  and pos  <= dl[1]:
-                   #p("#mid insert")
-                   d1 = dl[2]
-                   d2 = (d1[0],d1[1]-1)
-                   new_attrib.append(d2)
-              else:
-                   new_attrib.append(dl[2])
-           #p(new_attrib)
-           self._attrib = new_attrib
-           
-
-    def insert_text(self, text: str) -> None:
-
-        p('insert_text:' + str(self.edit_pos) + ":" + text)
-        self.update_attr(Attr.INS)
-        super().insert_text(text)
-
+"""
     def keypress(self, size, key):
-        if key == 'backspace':
-            p('backspace:' + str(self.edit_pos))
-            self.update_attr(Attr.BS)
-        elif key == 'delete':
-            p('delete:' + str(self.edit_pos))
-            self.update_attr(Attr.DEL)
-        
-        return super().keypress(size, key)
+        if key == 'q':
+            raise urwid.ExitMainLoop()
+        if key == 'esc':
+            if self.esc_mode:
+                self.esc_mode = False
+            else:
+                self.esc_mode = True
 
+            return None
+        else:
+            return super().keypress(size, key)
+"""
 
 class CommandBar(urwid.Edit):
     esc_mode = False
