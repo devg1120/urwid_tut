@@ -18,6 +18,9 @@ def pp(obj):
 def p(msg):
     print(msg, file = DBF, flush = True )
     
+def pn(*msgs):
+    print(msgs, file = DBF, flush = True )
+
 class Attr(Enum):
        INS = 1
        BS  = 2
@@ -224,6 +227,29 @@ class CommandBar(urwid.Edit):
         super().__init__(caps,b, allow_tab = allow_tab)
         self.esc_mode = False
 
+    def mouse_event(
+        self,
+        size: tuple[int],  # type: ignore[override]
+        event: str,
+        button: int,
+        col: int,
+        row: int,
+        focus: bool,
+        ) -> bool | None:
+        """
+        Move the cursor to the location clicked for button 1.
+
+        >>> size = (20,)
+        >>> e = Edit("","words here")
+        >>> e.mouse_event(size, 'mouse press', 1, 2, 0, True)
+        True
+        >>> e.edit_pos
+        2
+        """
+        pn("mouse_event:" , size,event,button,col,row,focus)
+        if button == 1:
+            return super().move_cursor_to_coords(size, col, row)
+        return False
 
     def text_render(
         self,
@@ -701,7 +727,20 @@ class Container(urwid.Frame):
             if  self.esc_mode:
                 self.command_mode = True
                 #edit_command = urwid.Edit(":", "", allow_tab=True)
-                self.footer = self.edit_command
+                self.footer = self.edit_command 
+                #size = (82,)
+                #self.footer.mouse_event(size, 'mouse press', 1, 2, 0, False)
+                #self.footer.mouse_event(size, 'mouse release', 1, 2, 0, True)
+                #self.footer.insert_text("oK")
+                #
+                # https://urwid.org/manual/widgets.html#container-widgets
+
+                p(self.get_focus_path())
+                self.set_focus_path(['footer'])
+                #self.set_focus_path(['body',0])
+                p(self.get_focus_path())
+                #self.footer.move_cursor_to_coords(size, 5, 0)
+                #super().focus(True)mouse_event(size, 'mouse press', 1, 2, 0, True)
                 #super().__init__(attrmap, footer=self.footer)
                 return True
 
