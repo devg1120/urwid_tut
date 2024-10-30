@@ -226,6 +226,8 @@ class CommandBar(urwid.Edit):
     def __init__(self,caps,b,allow_tab ):
         super().__init__(caps,b, allow_tab = allow_tab)
         self.esc_mode = False
+        urwid.register_signal(self.__class__, ['command_exec'])
+        
 
     def mouse_event(
         self,
@@ -344,20 +346,17 @@ class CommandBar(urwid.Edit):
 
         return canv
 
-"""
-    def keypress(self, size, key):
-        if key == 'q':
-            raise urwid.ExitMainLoop()
-        if key == 'esc':
-            if self.esc_mode:
-                self.esc_mode = False
-            else:
-                self.esc_mode = True
 
-            return None
+    def keypress(self, size, key):
+        if key == 'enter':
+            command = self.get_edit_text()
+            p("commandBar: enter: " )
+            p(command)
+            urwid.emit_signal(self, "command_exec", command)
+            return True
         else:
             return super().keypress(size, key)
-"""
+
 class LineWalker(urwid.ListWalker):
     """ListWalker-compatible class for lazily reading file contents."""
 
@@ -701,6 +700,8 @@ class Container(urwid.Frame):
         #super().__init__(attrmap, footer=self.edit_command)
         self.logfile = logfile
 
+        urwid.connect_signal(self.edit_command, 'command_exec', self.command_exec)
+
         self.d_key = False  # dd  line-delete
         self.y_key = False  # yy  line-yank
         self.g_key = False  # gg  focus head
@@ -709,6 +710,10 @@ class Container(urwid.Frame):
         self.replace = False
         self.command_mode = False
         self.V_mode = False
+
+    def command_exec(self, command):
+        p("command_exec: " + command)
+        self.keypress((0,),"esc")
 
     def log(self, msg):
         print(msg , file=self.logfile, flush=True)
