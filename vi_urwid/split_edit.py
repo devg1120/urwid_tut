@@ -715,12 +715,20 @@ class Container(urwid.Frame):
     def command_exec(self, command):
         p("command_exec: " + command)
 
+        #if command == "reset":
+        #   urwid.emit_signal(self, "split", "reset")
+        #elif command == "hsplit" or command == "split":
+        #   urwid.emit_signal(self, "split", "hsplit")
+        #elif command == "vsplit":
+        #   urwid.emit_signal(self, "split", "vsplit")
+
         if command == "reset":
-           urwid.emit_signal(self, "split", "reset")
+           p("REST")
+           urwid.emit_signal(self, "split", Split.NSPLIT)
         elif command == "hsplit" or command == "split":
-           urwid.emit_signal(self, "split", "hsplit")
+           urwid.emit_signal(self, "split", Split.HSPLIT)
         elif command == "vsplit":
-           urwid.emit_signal(self, "split", "vsplit")
+           urwid.emit_signal(self, "split", Split.VSPLIT)
 
         self.keypress((0,),"esc")
 
@@ -968,6 +976,7 @@ class EditDisplay:
     def __init__(self, name: str, log) -> None:  # Single
         self.split = Split.NSPLIT
         self.save_name = name
+        self.log = log
         self.walker = LineWalker(name)
         self.listbox = urwid.ListBox(self.walker)
         self.view = Container(urwid.AttrMap(self.listbox, "body"), walker=self.walker, logfile=log)
@@ -998,12 +1007,61 @@ class EditDisplay:
         self.pile = urwid.Pile([self.lb1, self.lb2])
         self.view = Container(urwid.AttrMap(self.pile, "body"), walker=self.walker1, logfile=log)
 
+
     def main(self) -> None:
         self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.unhandled_keypress)
         self.loop.run()
 
     def split_exec(self, mode):
-        p("split_exec:" + mode)
+        p("split_exec:" + str(mode))
+        if mode == Split.NSPLIT:
+           if self.split == Split.NSPLIT:
+               return
+           p("split_exec:" + "N")
+           self.split = Split.NSPLIT
+           self.view = Container(urwid.AttrMap(self.listbox, "body"), walker=self.walker, logfile=self.log)
+           urwid.connect_signal(self.view, 'split', self.split_exec)
+           self.loop.stop()
+           self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.unhandled_keypress)
+           self.loop.run()
+
+
+
+        elif mode == Split.VSPLIT:
+           if self.split != Split.NSPLIT:
+               return
+           p("split_exec:" + "V")
+           self.split = Split.VSPLIT
+           self.walker2 = LineWalker(self.save_name)
+           self.walker2.lines = self.walker.lines
+
+           #self.lb1 = urwid.ListBox(self.walker1)
+           self.lb2 = urwid.ListBox(self.walker2)
+           self.columns = urwid.Columns([self.listbox, self.lb2])
+           self.view = Container(urwid.AttrMap(self.columns, "body"), walker=self.walker, logfile=self.log)
+           urwid.connect_signal(self.view, 'split', self.split_exec)
+           self.loop.stop()
+           self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.unhandled_keypress)
+           self.loop.run()
+
+
+        elif mode == Split.HSPLIT:
+           if self.split != Split.NSPLIT:
+               return
+           p("split_exec:" + "H")
+           self.split = Split.HSPLIT
+           self.walker2 = LineWalker(self.save_name)
+           self.walker2.lines = self.walker.lines
+
+           #self.lb1 = urwid.ListBox(self.walker1)
+           self.lb2 = urwid.ListBox(self.walker2)
+
+           self.pile = urwid.Pile([self.listbox, self.lb2])
+           self.view = Container(urwid.AttrMap(self.pile, "body"), walker=self.walker, logfile=self.log)
+           urwid.connect_signal(self.view, 'split', self.split_exec)
+           self.loop.stop()
+           self.loop = urwid.MainLoop(self.view, self.palette, unhandled_input=self.unhandled_keypress)
+           self.loop.run()
 
     def unhandled_keypress(self, k: str | tuple[str, int, int, int]) -> bool | None:
         """Last resort for keypresses."""
