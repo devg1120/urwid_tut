@@ -736,6 +736,7 @@ class Container(urwid.Frame):
                 # https://urwid.org/manual/widgets.html#container-widgets
 
                 p(self.get_focus_path())
+                self._old_focus_path = self.get_focus_path()
                 self.set_focus_path(['footer'])
                 #self.set_focus_path(['body',0])
                 p(self.get_focus_path())
@@ -857,6 +858,8 @@ class Container(urwid.Frame):
                 #self.footer_text.set_text("OK 1")
                 #self.walker.lines_dump()
                 self.walker.lines_reset_attr_map()
+                if self.command_mode:
+                    self.set_focus_path(self._old_focus_path)
 
             else:
                 self.esc_mode = True

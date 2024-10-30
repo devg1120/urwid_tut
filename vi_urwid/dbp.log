@@ -1,7 +1,0 @@
-['body', 2]
-['footer']
-('mouse_event:', (82,), 'mouse press', 1, 37, 0, True)
-('mouse_event:', (82,), 'mouse release', 1, 37, 0, True)
-('mouse_event:', (82,), 'mouse press', 1, 20, 0, False)
-('mouse_event:', (82,), 'mouse drag', 1, 20, 0, True)
-('mouse_event:', (82,), 'mouse release', 1, 20, 0, True)
